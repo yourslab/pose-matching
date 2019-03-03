@@ -162,7 +162,7 @@ def dir_to_np(directory):
 			except IndexError:
 				continue
 				print(json_file)
-	return video
+	return np.array(video)
 
 def compare_dir(a, b):
 	video_a = dir_to_np(a)
