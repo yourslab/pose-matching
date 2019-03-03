@@ -5,6 +5,7 @@ from scipy.spatial.distance import cosine
 from sklearn import preprocessing
 from fastdtw import fastdtw
 from scipy import interpolate
+from operator import add
 
 def extract_coords(frame):
 	x = np.array(frame[0::3])
@@ -56,7 +57,27 @@ def interpolate_frames(frames, num_desired):
 	return np.array(new_frames).T
 
 def remove_confidences(frames):
-	return [[coord for i, coord in enumerate(frame) if (i+1)%3 != 0] for frame in frames]
+	return [[coord for i, coord in enumerate(frame) if i%3 != 1] for frame in frames]
+
+def get_confidences(frames):
+	return [[coord for i, coord in enumerate(frame) if i%3 == 1] for frame in frames]
+
+def get_centroid(frames, coord):
+	if coord == 'x':
+		X = np.array([[coord for i, coord in enumerate(frame) if i%3 == 0] for frame in frames])
+	else:
+		X = np.array([[coord for i, coord in enumerate(frame) if i%2 == 1] for frame in frames])
+	# Return the mean coord
+	return np.sum(np.sum(X, axis=0))/len(X)
+
+def get_first_hip(frames, coord):
+	if coord == 'x':
+		return frames[0][24]
+	else:
+		return frames[0][25]
+
+def translate_video(frames, x_offset, y_offset):
+	return [[(coord-x_offset) if i%2==0 else (coord-y_offset) for i, coord in enumerate(frame)] for frame in frames]
 
 def compare_videos(X, Y):
 	# Interpolate the shorter video to length of longer video
@@ -82,9 +103,11 @@ def json_to_np(directory):
 					video.append(frame['people'][0]['pose_keypoints_2d'])
 				except IndexError:
 					print(json_file)
-		# Remove confidences
-		video = remove_confidences(video)
-		videos.append(video)
+		x_offset = get_first_hip(video, 'x')
+		y_offset = get_first_hip(video, 'y')
+		translated = translate_video(remove_confidences(video), x_offset, y_offset)
+		#print(translated)
+		videos.append(translated)
 	return videos
 
 POS_DIR = 'data/posed/floss'
@@ -93,6 +116,6 @@ NEG_DIR = 'data/posed/not-floss'
 pos_videos = json_to_np(POS_DIR)
 neg_videos = json_to_np(NEG_DIR)
 
-print(compare_videos(np.array(pos_videos[1]), np.array(neg_videos[1])))
+print(compare_videos(np.array(pos_videos[2]), np.array(neg_videos[0])))
 #dist = frame_cos_dis(videos[0][0]['pose_keypoints_2d'], videos[1][0]['pose_keypoints_2d'])
 #print(dist)
