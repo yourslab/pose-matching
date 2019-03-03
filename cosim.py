@@ -152,7 +152,17 @@ def json_to_np(directory):
 		videos.append(translated)
 	return videos
 
+def dir_to_np(directory):
+	for json_file in os.listdir(directory):
+		with open('{}/{}'.format(directory, json_file)) as f:
+			frame = json.loads(f.read())
+			try:
+				video.append(frame['people'][0]['pose_keypoints_2d'])
+			except IndexError:
+				continue
+				print(json_file)
+
 def compare_dir(a, b):
-	video_a = json_to_np(a)[0]
-	video_b = json_to_np(b)[0]
+	video_a = dir_to_np(a)
+	video_b = dir_to_np(b)
 	return compare_videos(video_a, video_b)
