@@ -153,6 +153,7 @@ def json_to_np(directory):
 	return videos
 
 def dir_to_np(directory):
+	video = []
 	for json_file in os.listdir(directory):
 		with open('{}/{}'.format(directory, json_file)) as f:
 			frame = json.loads(f.read())
@@ -161,6 +162,7 @@ def dir_to_np(directory):
 			except IndexError:
 				continue
 				print(json_file)
+	return video
 
 def compare_dir(a, b):
 	video_a = dir_to_np(a)
