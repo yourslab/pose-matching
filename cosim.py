@@ -57,18 +57,18 @@ def interpolate_frames(frames, num_desired):
 	return np.array(new_frames).T
 
 def remove_confidences(frames):
-	return [[coord for i, coord in enumerate(frame) if i%3 != 1] for frame in frames]
+	return [[coord for i, coord in enumerate(frame) if (i+1)%3 != 0] for frame in frames]
 
 def get_confidences(frames):
-	return [[coord for i, coord in enumerate(frame) if i%3 == 1] for frame in frames]
+	return [[coord for i, coord in enumerate(frame) if (i+1)%3 == 0] for frame in frames]
 
 def get_centroid(frames, coord):
 	if coord == 'x':
-		X = np.array([[coord for i, coord in enumerate(frame) if i%3 == 0] for frame in frames])
+		coords = np.array([[coord for i, coord in enumerate(frame) if i%3 == 0] for frame in frames])
 	else:
-		X = np.array([[coord for i, coord in enumerate(frame) if i%2 == 1] for frame in frames])
+		coords = np.array([[coord for i, coord in enumerate(frame) if i%3 == 1] for frame in frames])
 	# Return the mean coord
-	return np.sum(np.sum(X, axis=0))/len(X)
+	return np.sum(np.sum(coords, axis=0))/len(X)
 
 def get_first_hip(frames, coord):
 	if coord == 'x':
