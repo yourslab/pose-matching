@@ -1,5 +1,6 @@
 import os
 import json
+import math
 import numpy as np
 from scipy.spatial.distance import cosine, euclidean
 from sklearn import preprocessing
@@ -57,27 +58,28 @@ lines = {
 def frame_vec(fr):
 	form = []
 	for i in range(25):
-		form.append({'x':fr[2*i],'y':fr[2*i+1]})
+		form.append({'x':fr[2*i],'y':fr[2*i+1],'conf':fr[2*i+2]})
 	return form
 
 def frame_cost(a,b):
 	a_fr = frame_vec(a)
 	b_fr = frame_vec(b)
 	total_cost = 0.0
-	count=0
+	total_conf = 0.0
 	for st in lines:
 		for end in lines[st]:
 			a_vec = np.array([ a_fr[st]['x']-a_fr[end]['x'], a_fr[st]['y']-a_fr[end]['y'] ])
 			b_vec = np.array([ b_fr[st]['x']-b_fr[end]['x'], b_fr[st]['y']-b_fr[end]['y'] ])
-			cost = euclidean(a_vec,b_vec)
-			if cost is not np.nan:
-				count += 1
+			if np.any(a_vec) and np.any(b_vec):
+				conf = 1 - math.fabs((a_fr[st]['conf']-b_fr[st]['conf'])*(a_fr[end]['conf']-b_fr[end]['conf']))
+				cost = cosine(a_vec,b_vec)*conf
+				total_conf += conf
 				total_cost += cost
-	#print(total_cost)
-	return total_cost/count
+
+	return total_cost/total_conf
 
 def normalize(frames):
-	return preprocessing.normalize(frames, norm='max')
+	return preprocessing.normalize(frames, norm='l2')
 
 # Interpolates frames to have num_desired frames
 # Needed for DTW to compare differently sized videos
@@ -115,7 +117,8 @@ def get_first_hip(frames, coord):
 		return frames[0][25]
 
 def translate_video(frames, x_offset, y_offset):
-	return [[(coord-x_offset) if i%2==0 else (coord-y_offset) for i, coord in enumerate(frame)] for frame in frames]
+	return [[(coord-x_offset) if i%3==0 else (coord-y_offset) 
+	if i%3==1 else coord for i, coord in enumerate(frame)] for frame in frames]
 
 def compare_videos(X, Y):
 	# Interpolate the shorter video to length of longer video
@@ -125,11 +128,8 @@ def compare_videos(X, Y):
 		X = interpolate_frames(X, len(Y))
 	X = normalize(np.array(X))
 	Y = normalize(np.array(Y))
-	dist, path = fastdtw(X, Y, radius=5, dist=frame_cost)
+	dist, path = fastdtw(X, Y, radius=4, dist=frame_cost)
 	return dist
-
-#def cos_sim_videos(X, Y):
-
 
 def json_to_np(directory):
 	# Each entry contains a json array of pose coordinates
@@ -143,11 +143,11 @@ def json_to_np(directory):
 				try:
 					video.append(frame['people'][0]['pose_keypoints_2d'])
 				except IndexError:
+					continue
 					print(json_file)
 		x_offset = get_centroid(video, 'x')
 		y_offset = get_centroid(video, 'y')
-		coords = remove_confidences(video)
-		translated = translate_video(coords, x_offset, y_offset)
+		translated = translate_video(video, x_offset, y_offset)
 		#print(translated)
 		videos.append(translated)
 	return videos
@@ -158,6 +158,6 @@ NEG_DIR = 'data/posed/not-floss'
 pos_videos = json_to_np(POS_DIR)
 neg_videos = json_to_np(NEG_DIR)
 
-print(compare_videos(np.array(pos_videos[2]), np.array(neg_videos[0])))
+print(compare_videos(np.array(pos_videos[2]), np.array(pos_videos[0])))
 #dist = frame_cos_dis(videos[0][0]['pose_keypoints_2d'], videos[1][0]['pose_keypoints_2d'])
 #print(dist)
