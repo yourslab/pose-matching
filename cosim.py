@@ -128,7 +128,7 @@ def compare_videos(X, Y):
 		X = interpolate_frames(X, len(Y))
 	X = normalize(np.array(X))
 	Y = normalize(np.array(Y))
-	dist, path = fastdtw(X, Y, radius=4, dist=frame_cost)
+	dist, path = fastdtw(X, Y, radius=3, dist=frame_cost)
 	return dist
 
 def json_to_np(directory):
@@ -154,10 +154,12 @@ def json_to_np(directory):
 
 POS_DIR = 'data/posed/floss'
 NEG_DIR = 'data/posed/not-floss'
+PHONE_DIR = 'data/posed/phone'
 
 pos_videos = json_to_np(POS_DIR)
 neg_videos = json_to_np(NEG_DIR)
+phone_videos = json_to_np(PHONE_DIR)
 
-print(compare_videos(np.array(pos_videos[2]), np.array(pos_videos[0])))
+print(compare_videos(np.array(phone_videos[0]), np.array(phone_videos[4])))
 #dist = frame_cos_dis(videos[0][0]['pose_keypoints_2d'], videos[1][0]['pose_keypoints_2d'])
 #print(dist)
