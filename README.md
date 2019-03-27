@@ -1,7 +1,8 @@
 # Pose Matching through Dynamic Time Warping of Confidence-Weighted Cosine Similarity
 
 ## About
-![alt-text-1](images/pose_a.png "Pose from Video A") ![alt-text-2](images/pose_b.png "Pose from Video B")
+![alt-text-1](images/pose_a.png "Pose from Video A")
+
 *Can we measure similarity between two videos of actors performing some movement?*
 
 Given two videos of actors performing some movement, the goal of this project is to measure similarity between those two videos. This is done by comparing the delta in the angles between joints by measuring cosine similarity. One issue with only using cosine similarity is that two videos might have the same movement but may not start at the same time or have different speeds. To fix this problem, the shorter video is linearly interpolated to match the length of the longer video. After which, dynamic time warping is used to compute the shortest path along the distance matrix with rows being frames of the first video and columns being frames of the second. The length of the shortest path is then used as a dissimilarity measure.
