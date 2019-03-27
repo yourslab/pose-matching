@@ -160,11 +160,11 @@ def dir_to_np(directory):
 			try:
 				video.append(frame['people'][0]['pose_keypoints_2d'])
 			except IndexError:
-				continue
 				print(json_file)
 	return np.array(video)
 
 def compare_dir(a, b):
 	video_a = dir_to_np(a)
 	video_b = dir_to_np(b)
+
 	return compare_videos(video_a, video_b)
